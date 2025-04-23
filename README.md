@@ -29,12 +29,11 @@ SCOM → SCOM Exporter → Prometheus or Grafana Alloy → Grafana
 ### Prerequisites
 
 - Microsoft SCOM 2019 or later
-- .NET 6 or higher on the exporter host
+- .NET 4.7.2 or higher on the exporter host
 - Either Prometheus or Grafana Alloy
 - Grafana instance
 
 ### Installation Steps
 
-1. Clone the repository:
 
 
