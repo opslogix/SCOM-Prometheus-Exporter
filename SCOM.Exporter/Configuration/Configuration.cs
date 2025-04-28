@@ -136,7 +136,7 @@ namespace SCOM.Exporter
                     }
 
                     var counterMap = configuration.GetSection("rules:map").Get<Dictionary<string, string>>();
-                    if (counterMap.Any())
+                    if (counterMap != null && counterMap.Any())
                     {
                         activity.AddEvent(new ActivityEvent("Rules counter map found"));
                         var values = new HashSet<string>();
