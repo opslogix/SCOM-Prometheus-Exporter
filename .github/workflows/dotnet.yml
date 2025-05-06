@@ -25,3 +25,14 @@ jobs:
       run: nuget restore SCOM-Prometheus-Exporter.sln
     - name: Build solution
       run: msbuild SCOM-Prometheus-Exporter.sln -t:rebuild -property:Configuration=Release
+    - name: Package build output
+      run: |
+        $output = "release_artifacts"
+        mkdir $output
+        Copy-Item "D:\a\SCOM-Prometheus-Exporter\SCOM-Prometheus-Exporter\SCOM.Exporter.Service\bin\Release\*" -Destination $output -Recurse
+        Compress-Archive -Path "$output\*" -DestinationPath "final_package.zip"
+    - name: Upload zip as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-package
+        path: final_package.zip
