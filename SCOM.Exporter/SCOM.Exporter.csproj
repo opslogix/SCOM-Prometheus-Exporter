@@ -47,20 +47,23 @@
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.4, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.4\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.EnterpriseManagement.Common, Version=7.0.5000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\SystemCenterSDKBinaries.7.2.12265.1\lib\Microsoft.EnterpriseManagement.Common.dll</HintPath>
+    <Reference Include="Microsoft.EnterpriseManagement.Common">
+      <HintPath>..\assemblies\Microsoft.EnterpriseManagement.Common.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.EnterpriseManagement.Core, Version=7.0.5000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\SystemCenterSDKBinaries.7.2.12265.1\lib\Microsoft.EnterpriseManagement.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\assemblies\Microsoft.EnterpriseManagement.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.EnterpriseManagement.HealthService, Version=7.0.5000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\SystemCenterSDKBinaries.7.2.12265.1\lib\Microsoft.EnterpriseManagement.HealthService.dll</HintPath>
+    <Reference Include="Microsoft.EnterpriseManagement.HealthService">
+      <HintPath>..\assemblies\Microsoft.EnterpriseManagement.HealthService.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.EnterpriseManagement.OperationsManager, Version=7.0.5000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\SystemCenterSDKBinaries.7.2.12265.1\lib\Microsoft.EnterpriseManagement.OperationsManager.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\assemblies\Microsoft.EnterpriseManagement.OperationsManager.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.EnterpriseManagement.Runtime, Version=7.0.5000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\SystemCenterSDKBinaries.7.2.12265.1\lib\Microsoft.EnterpriseManagement.Runtime.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\assemblies\Microsoft.EnterpriseManagement.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.Configuration, Version=9.0.0.4, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Configuration.9.0.4\lib\net462\Microsoft.Extensions.Configuration.dll</HintPath>
@@ -259,6 +262,7 @@
     <Compile Include="Utils\Counters.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
