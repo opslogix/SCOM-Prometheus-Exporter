@@ -22,6 +22,6 @@ jobs:
     #  with:
      #   dotnet-version: 8.0.x
     - name: Restore Packages
-      run: nuget restore MySolution.sln
+      run: nuget restore SCOM-Prometheus-Exporter.sln
     - name: Build solution
       run: msbuild SCOM-Prometheus-Exporter.sln -t:rebuild -property:Configuration=Release
