@@ -143,7 +143,7 @@ namespace SCOM.Exporter
                                 var metricName = metric.MetricName;
 
                                 //Check if there is a mapping for this metric/rule
-                                if(_configuration.CounterMap.TryGetValue(metric.Rule.Name.ToLower(), out string mappedMetricName))
+                                if(_configuration.CounterMap != null && _configuration.CounterMap.TryGetValue(metric.Rule.Name.ToLower(), out string mappedMetricName))
                                     metricName = mappedMetricName;
 
                                 gauge = Metrics.WithCustomRegistry(registry).CreateGauge(metricName, metric.MetricDescription, new GaugeConfiguration
