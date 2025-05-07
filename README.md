@@ -39,18 +39,93 @@ Installation can be done by using SC. E.G. 'sc create "ScomExporter" start=auto 
 
 ## Configuration
 
-Configuration is done using the appsettings.json. Basic examples/comments can be found inside the provided appsettings.json. The minimum that needs to be configured is the management_server property inside the connection section. Optionally you can provide a username and password to sign in to the SCOM SDK as a specific user.
+<details>
+<summary>Click to expand</summary>
 
-The appsettings will also allow you to turn on/off exporting of alerts, events, monitors and rules.
+```json
+{
+  "connection": {
+    "management_server": "mymanagementserver.com",
+    //User and password is not required but can be used to sign in as a specific user.
+    //"user": "",
+    //"password": ""
+  },
+  "scrape_interval_seconds": 60,
+  "alerts": {
+    "enabled": true
+  },
+  "events": {
+    "enabled": true
+  },
+  "monitors": {
+    "enabled": true
+  },
+  "rules": {
+    "enabled": true,
+    "include": [
+      //"Microsoft.SystemCenter.*"
+    ],
+    "exclude": [
+      //"Microsoft.SystemCenter.*"
+    ],
+    "map": {
+      //"the_scom_rule_name": "my_exported_counter_name"
+    }
+  }
+}
+```
+
+</details>
+
+### Key Settings
+
+- **`connection.management_server`**: The hostname or IP address of your SCOM management server.
+- **`connection.user` / `password`** *(optional)*: Use these if connecting with specific credentials is required.
+- **`scrape_interval_seconds`**: Interval in seconds at which metrics are collected and exported.
+- **`alerts.enabled`**: Set to `true` to export alerts as Loki logs.
+- **`events.enabled`**: Set to `true` to export events as Loki logs.
+- **`monitors.enabled`**: Set to `true` to export monitors as Prometheus gauges or histograms.
+- **`rules.enabled`**: Set to `true` to export rule-based performance metrics.
+
+#### `rules.include` (optional)
+
+A list of regular expressions for rule names to include. Cannot be used with `exclude`.
+
+#### `rules.exclude` (optional)
+
+A list of regular expressions for rule names to exclude. Cannot be used with `include`.
+
+#### `rules.map` (optional)
+
+A dictionary mapping SCOM rule names to Prometheus metric names. Keys and values must be unique. Metric names must match the regex: `^[a-zA-Z_][a-zA-Z0-9_]*$`.
 
 For rules we do our best to translate rules into metric names that confine to the prometheus standard, this however more often then not exports metrics with a name where the unit is incorrect or even unknown. You can use the appsettings.json and configure the rules -> map property where you can map rule names to specific counter names.
 
-You can also limit what rules should be included or excluded by using regex patterns.
+---
 
-## Final steps
-Whether its running as a windows service or using the debug.exe, if everything is configured correctly you should be able to reach the exporter endpoint by navigating to http://localhost:3005/metrics
+## ✅ Final Steps
 
-For SCOM metrics use the following pattern http://localhost:3005/metrics/{GROUP} where {GROUP} can be any SCOM group in your environment. For viewing ALL exported SCOM metrics replace group with "all" e.g. http://localhost:3005/metrics/all
+Whether you're running the exporter as a Windows service or via `debug.exe`, you can verify everything is working by checking the metrics endpoint:
 
+- **Base Exporter Endpoint**  
+  [http://localhost:3005/metrics](http://localhost:3005/metrics)
 
-If you can see the exported metrics on the endpoint the exporter is working correctly.
+### 🔍 Accessing SCOM Metrics
+
+You can query SCOM-specific metrics by targeting a particular group:
+
+```
+http://localhost:3005/metrics/{GROUP}
+```
+
+Replace `{GROUP}` with the name of any valid SCOM group in your environment.
+
+To view **all available SCOM metrics**, use:
+
+```
+http://localhost:3005/metrics/all
+```
+
+---
+
+If you can successfully access these endpoints and see metrics output, your exporter is configured and running correctly
