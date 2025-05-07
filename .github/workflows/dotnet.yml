@@ -30,9 +30,8 @@ jobs:
         $output = "release_artifacts"
         mkdir $output
         Copy-Item "D:\a\SCOM-Prometheus-Exporter\SCOM-Prometheus-Exporter\SCOM.Exporter.Service\bin\Release\*" -Destination $output -Recurse
-        Compress-Archive -Path "$output\*" -DestinationPath "final_package.zip"
     - name: Upload zip as artifact
       uses: actions/upload-artifact@v4
       with:
         name: release-package
-        path: final_package.zip
+        path: release_artifacts
