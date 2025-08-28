@@ -74,8 +74,11 @@ namespace SCOM.Exporter
                 });
             });
 
+            // Use the service's executable directory as the config base path
+            var basePath = AppDomain.CurrentDomain.BaseDirectory;
+
             var builder = new ConfigurationBuilder()
-              .SetBasePath(Directory.GetCurrentDirectory())
+              .SetBasePath(basePath)
               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
             var configuration = builder.Build();
