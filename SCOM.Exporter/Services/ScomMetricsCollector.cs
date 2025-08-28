@@ -220,7 +220,8 @@ namespace SCOM.Exporter
                     perfRules = perfRules.Where(x => _configuration.IncludedRules.Any(y => y.IsMatch(x.Name)));
 
                 if (_configuration.ExcludedRules.Any())
-                    perfRules = perfRules.Where(x => _configuration.ExcludedRules.Any(y => !y.IsMatch(x.Name)));
+                    //perfRules = perfRules.Where(x => _configuration.ExcludedRules.Any(y => !y.IsMatch(x.Name)));
+                    perfRules = perfRules.Where(x => !_configuration.ExcludedRules.Any(y => y.IsMatch(x.Name)));
 
                 return Task.FromResult(perfRules.AsEnumerable());
             }
