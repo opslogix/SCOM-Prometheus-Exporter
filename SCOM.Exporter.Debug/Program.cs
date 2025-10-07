@@ -7,7 +7,7 @@ namespace SCOM.Exporter.Debug
     {
         static void Main(string[] args)
         {
-            string baseAddress = "http://localhost:3005/";
+            string baseAddress = "http://+:3005/";
 
             // Start OWIN host 
             using (WebApp.Start<Startup>(url: baseAddress))

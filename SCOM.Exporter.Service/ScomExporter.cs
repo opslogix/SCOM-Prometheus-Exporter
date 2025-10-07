@@ -12,7 +12,7 @@ namespace SCOM.Exporter.Service
 
         protected override void OnStart(string[] args)
         {
-            WebApp.Start<Startup>("http://localhost:3005");
+            WebApp.Start<Startup>("http://+:3005");
         }
  
         protected override void OnStop()
