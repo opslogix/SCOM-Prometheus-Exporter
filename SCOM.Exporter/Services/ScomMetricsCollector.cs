@@ -172,12 +172,7 @@ namespace SCOM.Exporter
                                     instancePath = $"{metricValue.Data.MonitoringObjectName}";
                                 }
 
-                                var monitoringObjectPath = metricValue.Data.MonitoringObjectPath;
-                                var monitoringObjectDisplayName = metricValue.Data.MonitoringObjectDisplayName;
-                                var instanceName = metricValue.Data.InstanceName;
-                                var label = monitoringObjectPath == null ? _managementGroup.Name : $"{monitoringObjectPath}/{monitoringObjectDisplayName}";
-
-                                gauge.WithLabels(instancePath, instanceName).Set(metricValue.Value.SampleValue.Value);
+                                gauge.WithLabels(instancePath, metricValue.Data.InstanceName).Set(metricValue.Value.SampleValue.Value);
                             }
                         }
                     }),
