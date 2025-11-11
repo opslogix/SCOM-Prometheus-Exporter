@@ -1,0 +1,37 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+   # - name: Setup .NET
+     # uses: actions/setup-dotnet@v4
+    #  with:
+     #   dotnet-version: 8.0.x
+    - name: Restore Packages
+      run: nuget restore SCOM-Prometheus-Exporter.sln
+    - name: Build solution
+      run: msbuild SCOM-Prometheus-Exporter.sln -t:rebuild -property:Configuration=Release
+    - name: Package build output
+      run: |
+        $output = "release_artifacts"
+        mkdir $output
+        Copy-Item "D:\a\SCOM-Prometheus-Exporter\SCOM-Prometheus-Exporter\SCOM.Exporter.Service\bin\Release\*" -Destination $output -Recurse
+    - name: Upload zip as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-package
+        path: release_artifacts

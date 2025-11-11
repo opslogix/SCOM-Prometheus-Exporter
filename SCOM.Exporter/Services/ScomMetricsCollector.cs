@@ -99,7 +99,6 @@ namespace SCOM.Exporter
                 if (!group.Equals("all", StringComparison.OrdinalIgnoreCase))
                 {
                     var monitoringGroup = _groups.FirstOrDefault(x => x.FullName.Equals(group, StringComparison.OrdinalIgnoreCase)) ?? throw new Exception($"No monitoring group found with full name '{group}'");
-
                     if (!_groupedMonitoringObjects.TryGetValue(monitoringGroup, out var monitoringGroupObjects))
                         throw new Exception($"No monitoring objects found for group with full name '{group}'");
 
@@ -130,8 +129,6 @@ namespace SCOM.Exporter
                     metrics = _cachedMetrics.Response.Where(x => monitoringGroupObjects.Any(y => x.Values.FirstOrDefault()?.Data.MonitoringObjectId == y.Id)).ToList();
                 }
 
-                var test = metrics.FirstOrDefault(x => x.MetricName == "scom_opslogix_imp_vmware_datastore_datastore_free_space_percentage");
-
                 var tasks = new List<Task>
                 {
                     Task.Run(() =>
@@ -143,7 +140,7 @@ namespace SCOM.Exporter
                                 var metricName = metric.MetricName;
 
                                 //Check if there is a mapping for this metric/rule
-                                if(_configuration.CounterMap.TryGetValue(metric.Rule.Name.ToLower(), out string mappedMetricName))
+                                if(_configuration.CounterMap != null && _configuration.CounterMap.TryGetValue(metric.Rule.Name.ToLower(), out string mappedMetricName))
                                     metricName = mappedMetricName;
 
                                 gauge = Metrics.WithCustomRegistry(registry).CreateGauge(metricName, metric.MetricDescription, new GaugeConfiguration
@@ -159,12 +156,23 @@ namespace SCOM.Exporter
                                 if (metricValue is null || !metricValue.Value.SampleValue.HasValue)
                                     continue;
 
-                                var monitoringObjectPath = metricValue.Data.MonitoringObjectPath;
-                                var monitoringObjectDisplayName = metricValue.Data.MonitoringObjectDisplayName;
-                                var instanceName = metricValue.Data.InstanceName;
-                                var label = monitoringObjectPath == null ? _managementGroup.Name : $"{monitoringObjectPath}/{monitoringObjectDisplayName}";
+                                var instancePath = _managementGroup.Name;
 
-                                gauge.WithLabels(label, instanceName).Set(metricValue.Value.SampleValue.Value);
+                                if(!string.IsNullOrEmpty(metricValue.Data.MonitoringObjectPath))
+                                {
+                                    instancePath = metricValue.Data.MonitoringObjectPath;
+
+                                    if(!string.IsNullOrEmpty(metricValue.Data.MonitoringObjectName))
+                                    {
+                                        instancePath = $"{instancePath}/{metricValue.Data.MonitoringObjectName}";
+                                    }
+                                }
+                                else if(!string.IsNullOrEmpty(metricValue.Data.MonitoringObjectName))
+                                {
+                                    instancePath = $"{metricValue.Data.MonitoringObjectName}";
+                                }
+
+                                gauge.WithLabels(instancePath, metricValue.Data.InstanceName).Set(metricValue.Value.SampleValue.Value);
                             }
                         }
                     }),
@@ -187,10 +195,27 @@ namespace SCOM.Exporter
                                     {
                                         LabelNames = _monitorLabels
                                     });
+
                                     monitorGauges[monitor.Id] = gauge;
                                 }
 
-                                gauge.WithLabels(instance.Key.Path ?? _managementGroup.Name).Set((double)monitorState.HealthState);
+                                var instancePath = _managementGroup.Name;
+
+                                if(!string.IsNullOrEmpty(instance.Key.Path))
+                                {
+                                    instancePath = instance.Key.Path;
+
+                                    if(!string.IsNullOrEmpty(instance.Key.Name))
+                                    {
+                                        instancePath = $"{instancePath}/{instance.Key.Name}";
+                                    }
+                                }
+                                else if(!string.IsNullOrEmpty(instance.Key.Name))
+                                {
+                                    instancePath = $"{instance.Key.Name}";
+                                }
+
+                                gauge.WithLabels(instancePath).Set((double)monitorState.HealthState);
                             }
                         }
                     })
@@ -220,7 +245,7 @@ namespace SCOM.Exporter
                     perfRules = perfRules.Where(x => _configuration.IncludedRules.Any(y => y.IsMatch(x.Name)));
 
                 if (_configuration.ExcludedRules.Any())
-                    perfRules = perfRules.Where(x => _configuration.ExcludedRules.Any(y => !y.IsMatch(x.Name)));
+                    perfRules = perfRules.Where(x => !_configuration.ExcludedRules.Any(y => y.IsMatch(x.Name)));
 
                 return Task.FromResult(perfRules.AsEnumerable());
             }
@@ -270,10 +295,25 @@ namespace SCOM.Exporter
                 try
                 {
                     _rules = await GetRules();
+
+                    InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_RULES_COUNT_NAME].Set(_rules.Count());
+
                     _groups = await GetGroups();
+
+                    InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_GROUPS_COUNT_NAME].Set(_groups.Count());
+
                     _classes = await GetClasses(_rules);
-                    _instances = await GetMonitoringObjects(_classes);
-                    _monitors = _managementGroup.WithReconnect(() => _managementGroup.Monitoring.GetMonitors());
+
+                    InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_CLASSES_COUNT_NAME].Set(_classes.Count());
+
+                    if (_configuration.ShouldExportMonitors)
+                    {
+                        _instances = await GetMonitoringObjects(_classes);
+
+                        InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_INSTANCES_COUNT_NAME].Set(_instances.Count());
+
+                        _monitors = _managementGroup.WithReconnect(() => _managementGroup.Monitoring.GetMonitors());
+                    }
 
                     _groupedMonitoringObjects = _groups.ToDictionary(x => x, x =>
                     {
@@ -281,10 +321,6 @@ namespace SCOM.Exporter
                         return monitoringObjects.AsEnumerable();
                     });
 
-                    InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_INSTANCES_COUNT_NAME].Set(_instances.Count());
-                    InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_RULES_COUNT_NAME].Set(_rules.Count());
-                    InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_CLASSES_COUNT_NAME].Set(_classes.Count());
-                    InternalMetrics.Gauges[InternalMetrics.PROCESS_SCOM_GROUPS_COUNT_NAME].Set(_groups.Count());
                     InternalMetrics.Counters[InternalMetrics.PROCESS_SCOM_CONFIGURATION_REFRESH_COUNT_NAME].Inc();
                 }
                 catch (Exception ex)
@@ -301,9 +337,9 @@ namespace SCOM.Exporter
 
         private async Task PollScomConfiguration()
         {
-            while(true)
+            while (true)
             {
-                if(_getScomConfigurationTask != null) 
+                if (_getScomConfigurationTask != null)
                     await _getScomConfigurationTask;
 
                 _getScomConfigurationTask = GetScomConfiguration();
@@ -377,6 +413,7 @@ namespace SCOM.Exporter
 
                     while (reader.Read())
                     {
+
                         var monitoringPerformance = reader.GetMonitoringPerformanceData();
                         tasks.Add(GetMonitoringPerformanceDataValue(monitoringPerformance, start, end));
                     }
@@ -434,7 +471,7 @@ namespace SCOM.Exporter
                     activity.SetTag("scrape_interval_seconds", _configuration.ScrapeIntervalSeconds.TotalSeconds.ToString());
                     activity.SetTag("rule_count", _rules.Count().ToString());
                     activity.SetTag("class_count", _classes.Count().ToString());
-                    activity.SetTag("group_count", _groups.Count().ToString());
+                    //activity.SetTag("group_count", _groups.Count().ToString());
 
                     try
                     {
